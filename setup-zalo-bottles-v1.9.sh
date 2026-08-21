@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Zalo Bottles - Setup v1.9
+# Zalo Bottles - Setup v1.9.1
 # Author: Long Nguyen
 # 2-file installer architecture: install.sh -> setup-zalo-bottles.sh
 set -Eeuo pipefail
@@ -61,8 +61,11 @@ fi
 rm -f "$LAUNCHER" "$DESKTOP" "$HOME/Desktop/Zalo.desktop" "$HOME/Desktop/zalo.desktop"
 
 # Verify runner
-RUNNER_LIST="$("${BOTTLES[@]}" list components -f category:runners 2>/dev/null || true)"
-if grep -Fqx "$RUNNER_PREFERRED" <<<"$RUNNER_LIST"; then
+RUNNER_LIST="$(${BOTTLES[@]} list components -f category:runners 2>/dev/null || true)"
+# Bottles may print runners with list markers such as "- wine-11.13-amd64".
+# Normalize list markers, whitespace, and ANSI formatting before matching.
+RUNNER_NAMES="$(printf '%s\n' "$RUNNER_LIST" | sed -E 's/^[[:space:]]*-[[:space:]]*//; s/^[[:space:]]+//; s/[[:space:]]+$//' | sed -E 's/\x1B\[[0-9;]*[[:alpha:]]//g')"
+if printf '%s\n' "$RUNNER_NAMES" | grep -Fqx "$RUNNER_PREFERRED"; then
   RUNNER="$RUNNER_PREFERRED"
   ok "Verified runner: $RUNNER"
 else
@@ -82,7 +85,7 @@ info "Preparing fonts..."
 "${BOTTLES[@]}" install -b "$BOTTLE" allfonts >/dev/null 2>&1 || true
 
 info "Installing ZaloSetup.exe..."
-"${BOTTLES[@]}" run -b "$BOTTLE" -e "$INSTALLER" 2> >(sed '/err:ole:/d' >&2)
+"${BOTTLES[@]}" run -b "$BOTTLE" -e "$INSTALLER" 2> >(sed -E '/err:ole:/d; /err:winemenubuilder:/d; /process_run_key.*winemenubuilder\.exe/d' >&2)
 
 info "Searching installed Zalo.exe..."
 ZALO_ROOT="$BOTTLE_ROOT/drive_c/users/$USER/AppData/Local/Programs/Zalo"
@@ -145,7 +148,7 @@ chmod 644 "$DESKTOP"
 command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$HOME/.local/share/applications" >/dev/null 2>&1 || true
 
 cat > "$LOG_DIR/zalo-info.txt" <<EOF2
-Zalo Bottles v1.9
+Zalo Bottles v1.9.1
 Bottle: $BOTTLE
 Runner: $RUNNER
 Zalo: $ZALO_EXE
