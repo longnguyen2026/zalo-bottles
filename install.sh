@@ -7,9 +7,9 @@
 
 set -euo pipefail
 
-SETUP_URL="https://raw.githubusercontent.com/longnguyen2026/zalo-bottles/main/setup-zalo-bottles-v1.6.sh"
+SETUP_URL="https://raw.githubusercontent.com/longnguyen2026/zalo-bottles/main/setup-zalo-bottles-v1.7.sh"
 TMP_DIR="$(mktemp -d)"
-SETUP="$TMP_DIR/setup-zalo-bottles-v1.6.sh"
+SETUP="$TMP_DIR/setup-zalo-bottles-v1.7.sh"
 
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
