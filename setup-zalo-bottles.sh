@@ -198,6 +198,42 @@ else
 fi
 
 # -------------------------------------------------
+# Disable Wine Menu Builder
+# -------------------------------------------------
+#
+# Wine registers winemenubuilder.exe in:
+# HKLM\Software\Microsoft\Windows\CurrentVersion\RunServices
+#
+# Some packaged/custom runners do not include that executable, which
+# produces:
+#   err:wineboot:process_run_key ... winemenubuilder.exe -a -r (2)
+#
+# This is not required by Zalo. Remove the RunServices entry from this
+# prefix so the message does not appear on every wineboot.
+#
+
+disable_winemenubuilder() {
+    local REG="$BOTTLE_PATH/system.reg"
+
+    [[ -f "$REG" ]] || return 0
+
+    cp -f "$REG" "$REG.bak"
+
+    sed -i \
+        '/"winemenubuilder"="C:\\\\windows\\\\system32\\\\winemenubuilder\.exe -a -r"/d' \
+        "$REG"
+
+    # Also handle variants where the exact path differs.
+    sed -i \
+        '/"winemenubuilder".*winemenubuilder\.exe.*-a -r/d' \
+        "$REG"
+
+    echo "[OK] Disabled Wine winemenubuilder for Bottle '$BOTTLE'."
+}
+
+disable_winemenubuilder
+
+# -------------------------------------------------
 # Vietnamese support
 # -------------------------------------------------
 
