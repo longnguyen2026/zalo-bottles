@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-SETUP_URL="https://raw.githubusercontent.com/longnguyen2026/script-long/main/setup-zalo-bottles.sh"
+SETUP_URL="https://raw.githubusercontent.com/longnguyen2026/zalo-bottles/main/setup-zalo-bottles.sh"
 TMP_DIR="$(mktemp -d)"
 SETUP="$TMP_DIR/setup-zalo-bottles.sh"
 
