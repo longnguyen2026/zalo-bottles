@@ -2,9 +2,9 @@
 # Zalo Bottles - Bootstrap Installer v1.9
 # Author: Long Nguyen
 set -euo pipefail
-SETUP_URL="https://raw.githubusercontent.com/longnguyen2026/zalo-bottles/main/setup-zalo-bottles.sh"
+SETUP_URL="https://raw.githubusercontent.com/longnguyen2026/zalo-bottles/main/setup-zalo-bottles-v1.9.sh"
 TMP_DIR="$(mktemp -d)"
-SETUP="$TMP_DIR/setup-zalo-bottles.sh"
+SETUP="$TMP_DIR/setup-zalo-bottles-v1.9.sh"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 echo "================================================="
