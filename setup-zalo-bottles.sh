@@ -179,15 +179,16 @@ if "${CLI[@]}" list bottles 2>/dev/null | grep -Fqx "$BOTTLE"; then
 else
     echo "[INFO] Creating Bottle '$BOTTLE' with $RUNNER..."
 
-    # Bottles may print:
-    #   winemenubuilder.exe -a -r ... (2)
-    # during wineboot. This is not treated as a shell failure here.
+    # Bottles/Wine may print the harmless winemenubuilder diagnostic.
+    # Do NOT edit system.reg: Zalo v1.3 showed the QR screen correctly.
+    # Filter only this diagnostic while preserving the real exit code.
     set +e
     "${CLI[@]}" new \
         --bottle-name "$BOTTLE" \
         --environment application \
         --arch win64 \
-        --runner "$RUNNER"
+        --runner "$RUNNER" \
+        2> >(sed '/winemenubuilder\.exe -a -r/d' >&2)
     CREATE_RC=$?
     set -e
 
@@ -196,42 +197,6 @@ else
         exit "$CREATE_RC"
     fi
 fi
-
-# -------------------------------------------------
-# Disable Wine Menu Builder
-# -------------------------------------------------
-#
-# Wine registers winemenubuilder.exe in:
-# HKLM\Software\Microsoft\Windows\CurrentVersion\RunServices
-#
-# Some packaged/custom runners do not include that executable, which
-# produces:
-#   err:wineboot:process_run_key ... winemenubuilder.exe -a -r (2)
-#
-# This is not required by Zalo. Remove the RunServices entry from this
-# prefix so the message does not appear on every wineboot.
-#
-
-disable_winemenubuilder() {
-    local REG="$BOTTLE_PATH/system.reg"
-
-    [[ -f "$REG" ]] || return 0
-
-    cp -f "$REG" "$REG.bak"
-
-    sed -i \
-        '/"winemenubuilder"="C:\\\\windows\\\\system32\\\\winemenubuilder\.exe -a -r"/d' \
-        "$REG"
-
-    # Also handle variants where the exact path differs.
-    sed -i \
-        '/"winemenubuilder".*winemenubuilder\.exe.*-a -r/d' \
-        "$REG"
-
-    echo "[OK] Disabled Wine winemenubuilder for Bottle '$BOTTLE'."
-}
-
-disable_winemenubuilder
 
 # -------------------------------------------------
 # Vietnamese support
@@ -314,6 +279,14 @@ fi
 # -------------------------------------------------
 
 echo
+echo "[INFO] Waiting for Zalo to finish installing..."
+for _ in {1..15}; do
+    if find "$BOTTLE_PATH/drive_c" -type f -iname 'Zalo.exe' 2>/dev/null |         grep -v '/plugins/' | grep -v '/capture/' | grep -q .; then
+        break
+    fi
+    sleep 2
+done
+
 echo "[INFO] Searching installed Zalo.exe..."
 
 ZALO_EXE="$(find "$BOTTLE_PATH/drive_c" \
